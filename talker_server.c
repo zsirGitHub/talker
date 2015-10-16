@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     fd_set allset, rset;
     socklen_t clilen;
     struct sockaddr_in cliaddr, servaddr;
-    int client[CLIENT_MAX];
+    struct talker_info user_list[CLIENT_MAX], user_end;
     char buf[1024];
     struct talker_data *p_talker;
 
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     }
 
     for(i = 0; i < CLIENT_MAX; i++) {
-        client[i] = -1;
+        user_list[i].connet_flag = 0;
     }
 
     FD_ZERO(&allset);
@@ -83,8 +83,10 @@ int main(int argc, char **argv)
 
             printf("connfd:%d \r\n", connfd);
             for(i = 0; i < CLIENT_MAX; i++) {
-                if(client[i] < 0) {
-                    client[i] = connfd;
+                if(user_list[i].connet_flag = 0) {
+                    user_list[i].connet_flag = 1;
+                    user_list[i].talker_fd = connfd;
+                    sprintf(user_list[i].talker_name, "user_%d", i);
                     break;
                 }
             }
@@ -96,17 +98,32 @@ int main(int argc, char **argv)
             FD_SET(connfd, &allset);
             if(connfd > maxfd)
                 maxfd = connfd;
+
+            /*return connected user list*/
+            for(i = 0; i < CLIENT_MAX; i++) {
+                if(user_list[i].connet_flag = 0) {
+                    ret = write(connfd, &user_list[i], sizeof(user_list));
+                    if(ret < 0) {
+                        printf("write user list file\r\n");
+                        return -1;
+                    }
+                    sleep(10);
+                }
+            }
+            
+            user_end.connet_flag = 2;
+            write(connfd, &user_end, sizeof(user_list));
         }
 
         for(i = 0; i < CLIENT_MAX; i++) {
-            if((sockfd = client[i]) < 0)
-                continue;
-
-            if(FD_ISSET(sockfd, &rset)) {
-                if( (n = read(sockfd, buf, 1024)) > 0 ) {
-                    p_talker = (struct talker_data *)buf;
-                    write(p_talker->writefd, p_talker->data, 1024);
-                    printf("[%d]send msg to [%d]:%s\r\n", sockfd, p_talker->writefd, p_talker->data);
+            if(user_list[i].connet_flag = 1)
+            {
+                if(FD_ISSET(user_list[i].talker_fd, &rset)) {
+                    if( (n = read(user_list[i].talker_fd, buf, 1024)) > 0 ) {
+                        p_talker = (struct talker_data *)buf;
+                        write(p_talker->writefd, p_talker->data, 1024);
+                        printf("[%d]send msg to [%d]:%s\r\n", sockfd, p_talker->writefd, p_talker->data);
+                    }
                 }
             }
         }

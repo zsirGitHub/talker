@@ -54,6 +54,7 @@ int main(int argc, char **argv)
 
     //create_sem();
     //set_semvalue(); /*not need semaphore sync*/
+    //user_info_register(sockfd);
     pthread_create(&tid, NULL, (void *)talker_read_task, (void *)&sockfd);
     pthread_create(&tid_1, NULL, (void *)talker_write_task, (void *)&sockfd);
 

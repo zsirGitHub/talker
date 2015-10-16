@@ -28,7 +28,6 @@ union semun
     unsigned short *array;
 };
 
-
 int sem_id;
 
 void create_sem(void)
